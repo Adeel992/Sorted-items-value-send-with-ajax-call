@@ -1,0 +1,64 @@
+jQuery(document).ready(function() {
+    jQuery('.sortable').sortable({
+
+        axis: 'y',
+        update: function(event, ui) {
+
+
+            var movement = ui.position.top - ui.originalPosition.top > 0 ? "down" : "up";
+            var hasdrag = $(ui.item).hasClass('draggable')
+            var dragedValue = $(ui.item).attr('index');
+            var firstId = $(ui.item).attr('id');
+            if (movement == 'down') {
+                var exchangedValue = $(ui.item).prev('tr').attr('index');
+                var secondId = $(ui.item).prev('tr').attr('id');
+            } else {
+                var exchangedValue = $(ui.item).next('tr').attr('index');
+                var secondId = $(ui.item).next('tr').attr('id');
+            }
+
+            var difference = dragedValue - exchangedValue;
+
+            difference = Math.abs(difference);
+
+            if ((difference < 1.6) && hasdrag) {
+
+
+                jQuery.ajax({
+                    type: "POST",
+                    dataType: "json",
+                    url: ajaxurl,
+                    data: {
+                        action: "lineup_ordering",
+                        first_id: firstId,
+                        second_id: secondId,
+
+                    },
+                    success: function(response) {
+
+                        if (response.status == "success") {
+                            displayMsgBox('msg_box_lineup', 'success-message', response.message)
+                        } else {
+                            displayMsgBox('msg_box_lineup', 'error-message', response.message)
+
+                        }
+
+                        // location.reload();
+
+                    }
+                });
+
+            } else if (!hasdrag) {
+                $(this).sortable('cancel');
+                displayMsgBox('msg_box_lineup', 'error-message', 'Item should be draggable.')
+
+            } else {
+
+                $(this).sortable('cancel');
+                displayMsgBox('msg_box_lineup', 'error-message', 'Indexes should be within 1.5 range.')
+
+            }
+
+        }
+    });
+});
